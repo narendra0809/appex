@@ -31,18 +31,33 @@ class CvlKraService
 
     public function __construct()
     {
-        // Force IPv4 - CVL API may have IPv6 blocked or not whitelisted
+        // Force IPv4 - CVL API only supports IPv4 whitelisting
+        // Use numeric values for constants (in case they're not defined on some PHP installations)
+        // CURLOPT_IPRESOLVE = 113, CURL_IPRESOLVE_V4 = 1
+        $curlOptions = [];
+        if (defined('CURLOPT_IPRESOLVE') && defined('CURL_IPRESOLVE_V4')) {
+            $curlOptions[CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
+        } else {
+            // Use numeric values as fallback
+            $curlOptions[113] = 1;  // CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4
+        }
+
         $this->httpClient = new Client([
             'timeout' => 30,
             'connect_timeout' => 10,
             'http_errors' => false,
-            'force_ip_resolve' => 'v4',  // Force IPv4 only
-            'curl' => [
-                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,  // Force IPv4 at cURL level
-            ],
+            'force_ip_resolve' => 'v4',  // Force IPv4 only (Guzzle option)
+            'curl' => $curlOptions,
         ]);
 
         $this->crypto = new CvlCrypto();
+        
+        // Log the IPv4 force status
+        Log::info('CVL HTTP Client Config', [
+            'force_ip_resolve' => 'v4',
+            'curl_options' => $curlOptions,
+            'php_version' => PHP_VERSION,
+        ]);
         
         // Credentials from .env (matching Node.js CREDENTIALS)
         $this->apiKey = config('services.cvl_kra.api_key', env('CVL_API_KEY', ''));
@@ -67,6 +82,31 @@ class CvlKraService
             'base_url' => $this->apiBaseUrl,
             'configured' => !empty($this->apiKey) && !empty($this->aesKey),
         ];
+    }
+
+    /**
+     * Get outbound IP address (using IPv4)
+     */
+    private function getOutboundIp(): string
+    {
+        try {
+            // Use ifconfig.me to detect outbound IP (force IPv4)
+            $client = new Client([
+                'timeout' => 5,
+                'force_ip_resolve' => 'v4',
+                'curl' => [113 => 1],  // CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4
+            ]);
+            $response = $client->get('https://api4.my-ip.io/ip');
+            return trim($response->getBody()->getContents());
+        } catch (\Exception $e) {
+            try {
+                // Fallback to IPv4-specific service
+                $response = $client->get('https://ipv4.icanhazip.com');
+                return trim($response->getBody()->getContents());
+            } catch (\Exception $e2) {
+                return 'unknown';
+            }
+        }
     }
 
     /**
@@ -133,9 +173,13 @@ class CvlKraService
                 'password' => $this->password,
             ];
 
+            // Check outbound IP before making request
+            $outboundIp = $this->getOutboundIp();
             Log::info('CVL GetToken Request', [
                 'endpoint' => $endpoint,
                 'username' => $this->username,
+                'outbound_ip' => $outboundIp,
+                'is_ipv4' => filter_var($outboundIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? 'YES' : 'NO',
             ]);
 
             $response = $this->httpClient->post($endpoint, [

@@ -64,14 +64,20 @@ class TestCvlKra extends Command
         $this->newLine();
 
         // Force IPv4 - CVL API only supports IPv4 whitelisting
+        // Use numeric values for constants (CURLOPT_IPRESOLVE = 113, CURL_IPRESOLVE_V4 = 1)
+        $curlOptions = [];
+        if (defined('CURLOPT_IPRESOLVE') && defined('CURL_IPRESOLVE_V4')) {
+            $curlOptions[CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
+        } else {
+            $curlOptions[113] = 1;  // CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4
+        }
+
         $httpClient = new Client([
             'timeout' => 30,
             'connect_timeout' => 10,
             'http_errors' => false,
             'force_ip_resolve' => 'v4',
-            'curl' => [
-                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-            ],
+            'curl' => $curlOptions,
         ]);
 
         $crypto = new CvlCrypto();
