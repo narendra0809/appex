@@ -53,7 +53,7 @@ class TestCvlKra extends Command
         $this->info("===========================================");
         $this->newLine();
         
-        $environment = config('services.cvl_kra.environment', 'UAT');
+        $environment = config('services.cvl_kra.environment', 'LIVE');
         $this->info("Environment: {$environment}");
         $this->info("API URL: {$this->apiBaseUrl}");
         $this->info("Username: {$this->username}");

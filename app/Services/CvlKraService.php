@@ -78,7 +78,7 @@ class CvlKraService
      */
     public function getEnvironmentInfo(): array
     {
-        $environment = config('services.cvl_kra.environment', 'UAT');
+        $environment = config('services.cvl_kra.environment', 'LIVE');
         return [
             'environment' => $environment,
             'is_production' => strtolower($environment) === 'production',
@@ -556,7 +556,7 @@ class CvlKraService
     {
         Log::info('CVL KYC Verification Started', [
             'pan' => $pan, 
-            'env' => config('services.cvl_kra.environment', 'UAT')
+            'env' => config('services.cvl_kra.environment', 'LIVE')
         ]);
 
         try {
