@@ -100,8 +100,6 @@
                         <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PAN</th>
                         <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Name</th>
                         <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DOB</th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KYC</th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ZIP</th>
                     </tr>
                 </thead>
@@ -111,22 +109,7 @@
                         <td class="px-3 py-4 whitespace-nowrap font-mono font-bold text-gray-900 text-sm">{{ $kyc->pan }}</td>
                         <td class="px-3 py-4 whitespace-nowrap text-gray-700 text-sm hidden md:table-cell">{{ $kyc->name ?? '-' }}</td>
                         <td class="px-3 py-4 whitespace-nowrap text-gray-600 text-sm">{{ $kyc->dob }}</td>
-                        <td class="px-3 py-4 whitespace-nowrap">
-                            @if($kyc->kyc_status)
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    {{ $kyc->kyc_status }}
-                                </span>
-                            @else
-                                <span class="text-gray-400">-</span>
-                            @endif
-                        </td>
-                        <td class="px-3 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                                {{ $kyc->status === 'verified' ? 'bg-green-100 text-green-800' : 
-                                   ($kyc->status === 'not_found' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
-                                {{ ucfirst($kyc->status) }}
-                            </span>
-                        </td>
+                       
                         <td class="px-3 py-4 whitespace-nowrap">
                             @if($kyc->zip_path)
                                 <a href="{{ route('kyc.download.zip', ['pan' => $kyc->pan]) }}" 

@@ -59,6 +59,9 @@ class CvlKraService
             'php_version' => PHP_VERSION,
         ]);
         
+        // Get and log server IP information (IPv4 and IPv6)
+        $this->getServerIpInfo();
+        
         // Credentials from .env (matching Node.js CREDENTIALS)
         $this->apiKey = config('services.cvl_kra.api_key', env('CVL_API_KEY', ''));
         $this->aesKey = config('services.cvl_kra.aes_key', env('CVL_AES_KEY', ''));
@@ -82,6 +85,72 @@ class CvlKraService
             'base_url' => $this->apiBaseUrl,
             'configured' => !empty($this->apiKey) && !empty($this->aesKey),
         ];
+    }
+
+    /**
+     * Get all server IP addresses (IPv4 and IPv6) and outbound IP being used
+     */
+    private function getServerIpInfo(): array
+    {
+        $info = [
+            'server_ipv4' => 'unknown',
+            'server_ipv6' => 'unknown',
+            'outbound_ip' => 'unknown',
+            'outbound_is_ipv4' => false,
+        ];
+
+        // Get IPv4 (forced)
+        try {
+            $clientV4 = new Client([
+                'timeout' => 5,
+                'force_ip_resolve' => 'v4',
+                'curl' => [113 => 1],
+            ]);
+            $response = $clientV4->get('https://api4.my-ip.io/ip');
+            $info['server_ipv4'] = trim($response->getBody()->getContents());
+        } catch (\Exception $e) {
+            try {
+                $response = $clientV4->get('https://ipv4.icanhazip.com');
+                $info['server_ipv4'] = trim($response->getBody()->getContents());
+            } catch (\Exception $e2) {
+                $info['server_ipv4'] = 'failed';
+            }
+        }
+
+        // Get IPv6 (if available)
+        try {
+            $clientV6 = new Client([
+                'timeout' => 5,
+                'force_ip_resolve' => 'v6',
+                'curl' => [113 => 2],
+            ]);
+            $response = $clientV6->get('https://api6.my-ip.io/ip');
+            $info['server_ipv6'] = trim($response->getBody()->getContents());
+        } catch (\Exception $e) {
+            try {
+                $response = $clientV6->get('https://ipv6.icanhazip.com');
+                $info['server_ipv6'] = trim($response->getBody()->getContents());
+            } catch (\Exception $e2) {
+                $info['server_ipv6'] = 'not_available';
+            }
+        }
+
+        // Get default outbound IP (without forcing - shows what PHP uses by default)
+        try {
+            $clientDefault = new Client(['timeout' => 5]);
+            $response = $clientDefault->get('https://ifconfig.me/ip');
+            $info['outbound_ip'] = trim($response->getBody()->getContents());
+        } catch (\Exception $e) {
+            $info['outbound_ip'] = 'unknown';
+        }
+
+        // Check if outbound is IPv4
+        $info['outbound_is_ipv4'] = filter_var($info['outbound_ip'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? true : false;
+
+        // Log the IP information
+        Log::info('CVL Server IP Info', $info);
+
+        return $info;
     }
 
     /**

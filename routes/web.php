@@ -18,6 +18,16 @@ Route::get('/check-ip', function () {
         'ipv6' => file_get_contents('https://api64.ipify.org')
     ]);
 });
+
+// Temporary route to clear cache - DELETE AFTER USE
+Route::get('/clear-cache', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        return response()->json(['status' => 'success', 'message' => 'Cache cleared successfully']);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+});
 Route::get('/test/{clientId}', function ($clientId) {
     $client = \App\Models\Client::findOrFail($clientId);
     return view('test', compact('client'));
