@@ -278,6 +278,19 @@ class CvlKraService
                 ];
             }
             
+            // Check for HTML response (Cloudflare block page)
+            if (preg_match('/^<!DOCTYPE html>/i', $responseBody) || preg_match('/<html/i', $responseBody)) {
+                Log::error('CVL API HTML Block Page', [
+                    'body' => substr($responseBody, 0, 500),
+                    'hint' => 'CVL API is returning HTML block page instead of encrypted data. Your IP range is blocked by CVL.'
+                ]);
+                return [
+                    'success' => false, 
+                    'error' => 'CVL API is blocking your server IP range. Consider using a different hosting provider or proxy service.',
+                    'error_code' => 'IP_RANGE_BLOCKED'
+                ];
+            }
+            
             // CVL API returns encrypted data wrapped in quotes: "IV:ENCRYPTED_DATA"
             // Remove outer quotes and decrypt
             $responseBody = trim($responseBody, '"');
