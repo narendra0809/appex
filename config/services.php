@@ -48,7 +48,7 @@ return [
         'api_key' => env('CVL_API_KEY', ''),
         'aes_key' => env('CVL_AES_KEY', ''),           // Base64-encoded key for AES-192 (existing)
         'aes_key_256' => env('CVL_AES_KEY_256', ''),    // Raw UTF-8 key for AES-256 (SolicitImage)
-        // 'environment' => env('CVL_ENVIRONMENT', 'LIVE'),
+        'environment' => env('CVL_ENVIRONMENT', 'LIVE'),
     ],
 
 ];

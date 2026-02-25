@@ -556,7 +556,7 @@ class CvlKraService
     {
         Log::info('CVL KYC Verification Started', [
             'pan' => $pan, 
-            'env' => config('services.cvl_kra.environment')
+            'env' => config('services.cvl_kra.environment', 'LIVE')
         ]);
 
         try {
