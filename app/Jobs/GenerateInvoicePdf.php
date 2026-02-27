@@ -56,7 +56,7 @@ class GenerateInvoicePdf implements ShouldQueue
      */
     public function handle(): void
     {
-        $client = Client::findOrFail($this->clientId);
+        $client = Client::with('invoice')->findOrFail($this->clientId);
         
         // Get values from database
         $net = (float) ($client->net_amount ?? 0);
@@ -100,7 +100,8 @@ class GenerateInvoicePdf implements ShouldQueue
                 $invoice->client_id = $this->clientId;
             }
             if (!$invoice->invoice_no) {
-                $invoice->invoice_no = 'INV-' . date('Ymd') . '-' . str_pad($this->clientId, 4, '0', STR_PAD_LEFT);
+                // Generate auto-increment invoice number starting from ARC600
+                $invoice->invoice_no = $this->generateInvoiceNumber();
             }
             $invoice->sent_at = now();
             $invoice->save();
@@ -127,5 +128,31 @@ class GenerateInvoicePdf implements ShouldQueue
     public function failed(\Throwable $exception): void
     {
         \Log::error('GenerateInvoicePdf job failed: ' . $exception->getMessage());
+    }
+
+    /**
+     * Generate auto-increment invoice number starting from ARC600
+     */
+    private function generateInvoiceNumber(): string
+    {
+        // Starting number
+        $startNumber = 600;
+        $prefix = 'ARC';
+        
+        // Get the last invoice number from database
+        $lastInvoice = Invoice::where('invoice_no', 'like', $prefix . '%')
+            ->orderBy('invoice_no', 'desc')
+            ->first();
+        
+        if ($lastInvoice && preg_match('/^ARC(\d+)$/', $lastInvoice->invoice_no, $matches)) {
+            // Extract the numeric part and increment
+            $lastNumber = (int) $matches[1];
+            $newNumber = $lastNumber + 1;
+        } else {
+            // No previous invoice, start from ARC600
+            $newNumber = $startNumber;
+        }
+        
+        return $prefix . $newNumber;
     }
 }

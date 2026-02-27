@@ -29,7 +29,7 @@ Route::get('/clear-cache', function () {
     }
 });
 Route::get('/test/{clientId}', function ($clientId) {
-    $client = \App\Models\Client::findOrFail($clientId);
+    $client = \App\Models\Client::with('invoice')->findOrFail($clientId);
     return view('test', compact('client'));
 });
 Route::get('/dashboard', function () {

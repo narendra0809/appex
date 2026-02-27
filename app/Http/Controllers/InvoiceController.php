@@ -43,7 +43,7 @@ class InvoiceController extends Controller
         // Release session file lock so other requests aren't blocked
         session()->save();
         
-        $client = Client::findOrFail($clientId);
+        $client = Client::with('invoice')->findOrFail($clientId);
 
         try {
             // Check if PDF already exists in storage

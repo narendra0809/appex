@@ -338,7 +338,7 @@
         <table class="invoice-details">
             <tr>
                 <td style="width: 50%; border-right: 1px solid #ccc;">
-                    <span class="bold">Invoice No:</span> {{ 'ACR' . $client->id }}
+                    <span class="bold">Invoice No:</span> {{ $client->invoice->invoice_no ?? App\Models\Invoice::getNextInvoiceNumber() }}
                 </td>
                 <td>
                     <span class="bold">Invoice Date:</span> {{ $client->payment_date ? date('d M, Y', strtotime($client->payment_date)) : date('d M, Y') }}
