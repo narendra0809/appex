@@ -65,16 +65,4 @@
             {{ __('Sign In') }}
         </button>
     </form>
-
-    <!-- Register Link -->
-    @if (Route::has('register'))
-        <div class="mt-6 text-center">
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-                {{ __("Don't have an account?") }}
-                <a class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold transition-colors" href="{{ route('register') }}">
-                    {{ __('Create Account') }}
-                </a>
-            </p>
-        </div>
-    @endif
 </x-guest-layout>
